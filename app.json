@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "minha-estante",
+    "name": "Minha Estante",
     "slug": "minha-estante",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true
     },
