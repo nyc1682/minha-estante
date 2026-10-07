@@ -2,7 +2,13 @@
 
 O projeto está configurado para gerar um APK de versão final, com o JavaScript dentro do aplicativo. Após instalar, você abre Minha Estante pelo ícone no celular, sem Expo Go e sem o computador. Os cadastros e as capas continuam locais.
 
-**Situação atual:** projeto vinculado à conta Expo `langue`, com chave Android gerenciada pelo EAS. Compilação solicitada; o APK ainda precisa concluir a geração.
+**Situação atual:** APK Android 1.0.0 gerado com sucesso na conta Expo `langue`, com chave Android gerenciada pelo EAS. O teste no celular físico ainda precisa da sua confirmação.
+
+[Baixar o APK para instalar no Android](https://expo.dev/artifacts/eas/d8Tv1Op8i-2cNdNeT7COLs8M2X0LYIoj56Lk2UL-TRU.apk)
+
+Cópia local do instalador: `C:\Users\nycol\Documents\Codex\2026-10-07\me-d\outputs\minha-estante-1.0.0.apk`.
+
+O arquivo tem cerca de 70 MB. Sua estrutura contém manifesto Android, código nativo, JavaScript embutido e bloco de assinatura. Isso verifica o conteúdo do instalador; a abertura, a galeria e a persistência no aparelho devem ser testadas seguindo os passos abaixo.
 
 Projeto Expo: https://expo.dev/accounts/langue/projects/minha-estante
 
@@ -64,7 +70,7 @@ Aguarde o status Finished. O tempo depende da fila e da compilação. O terminal
 
 ## Arquivos de configuração
 
-O código completo de `eas.json` e `app.json` está abaixo. Ambos ficam na pasta minha-estante. A CLI poderá acrescentar o identificador do projeto Expo em app.json quando o projeto for vinculado à sua conta.
+O código completo de `eas.json` e `app.json` está abaixo. Ambos ficam na pasta minha-estante. A CLI acrescentou o identificador do projeto Expo em app.json ao vincular o projeto à conta langue.
 
 ### eas.json
 
