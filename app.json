@@ -6,6 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "updates": {
+      "enabled": false
+    },
     "plugins": [
       [
         "expo-image-picker",
@@ -20,6 +23,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.nyc1682.minhaestante",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

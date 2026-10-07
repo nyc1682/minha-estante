@@ -4,6 +4,11 @@ App para organizar mangás, manhwas, livros, filmes e séries, desenvolvido em J
 
 ## Etapa atual
 
+Preparação da etapa 7: APK Android instalável, sem Expo Go ou computador durante o uso.
+Configurações em eas.json e app.json; instruções completas em ETAPA-7.md.
+O APK ainda precisa ser compilado no EAS após entrar na conta Expo.
+Cadastros do Expo Go não são transferidos automaticamente para o aplicativo separado.
+
 Etapa 6: menu lateral que desliza da esquerda para a direita ao tocar em ☰ Menu.
 O menu fecha ao escolher uma opção, tocar fora, tocar em × ou usar Voltar no Android.
 Opções: Cadastrar novo item, Todos, Terminei, Lendo / assistindo e Quero ler / assistir.
@@ -62,7 +67,7 @@ Para parar o servidor, pressione Ctrl+C no terminal.
 
 O GitHub guarda o código e seu histórico; ele não instala o app no celular.
 Este teste usa o servidor local. Uma versão instalável que funcione sem
-computador será preparada em uma etapa posterior.
+computador está configurada para compilação conforme ETAPA-7.md.
 
 ## Arquivos principais
 
@@ -76,6 +81,7 @@ computador será preparada em uma etapa posterior.
 - Secao.js: componente da etapa anterior, preservado como referência; não é usado pela tela atual.
 - index.js: registra o componente no Expo.
 - app.json: configura nome, orientação e aparência.
+- eas.json: perfil de compilação para gerar um APK Android de versão final.
 - package.json: dependências e comandos.
 - package-lock.json: versões exatas das dependências.
 - assets/: imagens padrão do template Expo.
