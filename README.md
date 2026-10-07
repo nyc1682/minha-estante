@@ -1,14 +1,15 @@
 # Minha Estante
 
-App para organizar mangás e manhwas, desenvolvido em JavaScript, React Native e Expo.
+App para organizar mangás, manhwas e livros, desenvolvido em JavaScript, React Native e Expo.
 
 ## Etapa atual
 
-Etapa 2: cadastro de obras, lista e categorias Lendo, Quero ler, Já li e Pausado.
-Informe nome, tipo (mangá/manhwa) e último capítulo lido. Os dados ficam salvos
-localmente no celular, sem login ou servidor. Já li corresponde a concluído.
-Edição, exclusão, atualização de capítulos e busca serão adicionadas nas próximas
-etapas, após confirmar o teste desta versão no celular.
+Etapa 3: cadastro e edição de obras, com os status Lendo, Quero ler e Já li.
+Tipos: Mangá, Manhwa e Livro. Acompanhe o progresso por capítulos ou páginas.
+Toque em Editar obra, altere os campos e salve, ou cancele para descartar o rascunho.
+Filtre a lista por status e por tipo. Os dados ficam salvos no celular.
+Cadastros antigos em Pausado aparecem como Lendo, mantendo o progresso.
+Exclusão e busca serão adicionadas após confirmar o teste desta etapa.
 
 ## Abrir no Windows
 
@@ -32,8 +33,10 @@ Conecte o computador e o celular à mesma rede Wi-Fi.
 Abra o Expo Go e escaneie o QR code mostrado no terminal.
 Você deve ver “Minha Estante” e o formulário “Adicionar obra”.
 Cadastre uma obra em cada status e toque nas categorias para filtrar a lista.
+Edite uma obra: o status e o progresso devem mudar sem duplicar o cadastro.
+Cadastre um Livro e teste o filtro Livro e o progresso por páginas.
 Feche e reabra o projeto no Expo Go para conferir que as obras foram mantidas.
-O guia ETAPA-2.md explica os conceitos e mostra o código completo dos arquivos.
+O guia ETAPA-3.md explica os conceitos e mostra o código completo dos arquivos.
 Para parar o servidor, pressione Ctrl+C no terminal.
 
 O GitHub guarda o código e seu histórico; ele não instala o app no celular.
@@ -44,7 +47,7 @@ computador será preparada em uma etapa posterior.
 
 - App.js: formulário, lista, estado React, carregamento e gravação local.
 - Opcoes.js: botões reutilizáveis de tipo, status e categorias.
-- obras.js: opções e validação dos cadastros e dados salvos.
+- obras.js: opções, validação, migração dos dados antigos e atualização da lista.
 - index.js: registra o componente no Expo.
 - app.json: configura nome, orientação e aparência.
 - package.json: dependências e comandos.
@@ -54,8 +57,9 @@ computador será preparada em uma etapa posterior.
 ## Verificações
 
 O pacote JavaScript para Android foi gerado e a análise ESLint passou.
-A validação de campos e a leitura dos dados salvos foram verificadas, incluindo
-os quatro status, capítulos decimais, títulos vazios e dados inválidos.
+A edição sem duplicação, migração de Pausado para Lendo, tipos, progresso e
+leitura dos dados salvos foram verificados. Páginas aceitam números inteiros;
+capítulos também aceitam decimais. Títulos vazios e valores inválidos são rejeitados.
 O teste visual e a persistência em um celular físico ainda precisam ser confirmados.
 Não há TypeScript nesta versão. ESLint é uma ferramenta de desenvolvimento.
 

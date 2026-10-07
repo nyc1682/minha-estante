@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-export default function Opcoes({ opcoes, valor, aoSelecionar, grupo }) {
+export default function Opcoes({ opcoes, valor, aoSelecionar, grupo, desabilitado = false }) {
   return (
     <View style={styles.linha}>
       {opcoes.map((opcao) => (
@@ -8,11 +8,12 @@ export default function Opcoes({ opcoes, valor, aoSelecionar, grupo }) {
           key={opcao.valor}
           accessibilityRole="button"
           accessibilityLabel={`${grupo}: ${opcao.texto}`}
-          accessibilityState={{ selected: valor === opcao.valor }}
+          accessibilityState={{ selected: valor === opcao.valor, disabled: desabilitado }}
+          disabled={desabilitado}
           onPress={() => aoSelecionar(opcao.valor)}
           style={({ pressed }) => [
             styles.botao, valor === opcao.valor && styles.selecionado,
-            pressed && styles.pressionado,
+            (pressed || desabilitado) && styles.pressionado,
           ]}
         >
           <Text style={styles.texto}>{opcao.texto}</Text>
