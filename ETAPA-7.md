@@ -2,7 +2,11 @@
 
 O projeto está configurado para gerar um APK de versão final, com o JavaScript dentro do aplicativo. Após instalar, você abre Minha Estante pelo ícone no celular, sem Expo Go e sem o computador. Os cadastros e as capas continuam locais.
 
-**Situação atual:** configurações preparadas. O APK ainda não foi gerado; falta entrar na conta Expo e concluir a compilação nos servidores EAS.
+**Situação atual:** projeto vinculado à conta Expo `langue`, com chave Android gerenciada pelo EAS. Compilação solicitada; o APK ainda precisa concluir a geração.
+
+Projeto Expo: https://expo.dev/accounts/langue/projects/minha-estante
+
+Compilação Android 1.0.0: https://expo.dev/accounts/langue/projects/minha-estante/builds/d765b791-d4e4-4587-ae11-d5f1eb3e88b4
 
 ## Conceitos
 
@@ -121,6 +125,11 @@ O código completo de `eas.json` e `app.json` está abaixo. Ambos ficam na pasta
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5f169008-19cd-48f4-9b61-89b0231a3bdb"
+      }
     }
   }
 }
