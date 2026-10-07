@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Capa from './Capa';
-import { STATUS } from './obras';
+import { opcoesStatus, rotuloProgresso } from './obras';
 
 const GRUPOS = [
   { valor: 'livro', texto: 'Livros' },
   { valor: 'manga', texto: 'Mangás' },
   { valor: 'manhwa', texto: 'Manhwas' },
+  { valor: 'filme', texto: 'Filmes' },
+  { valor: 'serie', texto: 'Séries' },
 ];
 
 export default function ListaObras({ obras, aoEditar, ocupado }) {
@@ -23,9 +25,9 @@ export default function ListaObras({ obras, aoEditar, ocupado }) {
                   <Capa uri={obra.capa} titulo={obra.titulo} />
                   <View style={styles.dados}>
                     <Text style={styles.titulo}>{obra.titulo}</Text>
-                    <Text style={styles.status}>{STATUS.find((item) => item.valor === obra.status).texto}</Text>
+                    <Text style={styles.status}>{opcoesStatus(obra.tipo).find((item) => item.valor === obra.status).texto}</Text>
                     <Text style={styles.descricao}>
-                      {obra.unidade === 'pagina' ? 'Última página' : 'Último capítulo'}: {String(obra.progresso).replace('.', ',')}
+                      {rotuloProgresso(obra.unidade)}: {String(obra.progresso).replace('.', ',')}
                     </Text>
                   </View>
                 </View>

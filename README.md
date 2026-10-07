@@ -1,19 +1,23 @@
 # Minha Estante
 
-App para organizar mangás, manhwas e livros, desenvolvido em JavaScript, React Native e Expo.
+App para organizar mangás, manhwas, livros, filmes e séries, desenvolvido em JavaScript, React Native e Expo.
 
 ## Etapa atual
 
-Etapa 5: tela organizada em uma coluna de seções que abrem e fecham.
-Seções: Cadastrar novo item, Todos, Terminei, Lendo e Quero ler.
-Cada lista mostra os tópicos Livros, Mangás e Manhwas com suas quantidades.
-Uma seção abre por vez; o cadastro começa fechado e Todos começa aberto.
-Os status são Lendo, Quero ler e Terminei (o mesmo concluído antes chamado Já li).
-Tipos: Mangá, Manhwa e Livro. Acompanhe o progresso por capítulos ou páginas.
+Etapa 6: menu lateral que desliza da esquerda para a direita ao tocar em ☰ Menu.
+O menu fecha ao escolher uma opção, tocar fora, tocar em × ou usar Voltar no Android.
+Opções: Cadastrar novo item, Todos, Terminei, Lendo / assistindo e Quero ler / assistir.
+A tela mostra somente o conteúdo escolhido; a opção inicial é Todos.
+Cada lista mostra os tópicos Livros, Mangás, Manhwas, Filmes e Séries com suas quantidades.
+Tipos: Mangá, Manhwa, Livro, Filme e Série.
+Leituras usam Lendo / Quero ler; filmes e séries usam Assistindo / Quero assistir.
+Terminei vale para todos. Os valores salvos dos status continuam compatíveis com as versões anteriores.
+Leituras acompanham capítulos ou páginas; filmes, minutos; séries, episódios ou minutos.
+Páginas e episódios aceitam inteiros. Trocar tipo ou unidade reinicia o campo de progresso em 0.
 Toque em Editar obra, altere os campos e salve, ou cancele para descartar o rascunho.
-Escolha a seção do status desejado e encontre as obras pelo tópico de tipo.
+Escolha no menu o status desejado e encontre as obras pelo tópico de tipo.
 Ao editar uma obra, o formulário abre automaticamente. Ao salvar, abre sua categoria.
-Fechar o formulário preserva os campos; Cancelar edição descarta o rascunho.
+Trocar de opção no menu preserva os campos; Cancelar edição descarta o rascunho e mostra Todos.
 Os dados ficam salvos no celular.
 Cadastros antigos em Pausado aparecem como Lendo, mantendo o progresso.
 Escolha uma capa opcional da galeria, veja a prévia e salve a obra.
@@ -42,15 +46,18 @@ Usamos `.cmd` para evitar bloqueios de scripts PowerShell no Windows.
 Instale o Expo Go: https://expo.dev/go.
 Conecte o computador e o celular à mesma rede Wi-Fi.
 Abra o Expo Go e escaneie o QR code mostrado no terminal.
-Você deve ver “Minha Estante” e o formulário “Adicionar obra”.
-Toque em Cadastrar novo item para abrir o formulário.
-Cadastre uma obra em cada status e abra as categorias para conferir os tópicos.
+Você deve ver “Minha Estante”, o botão ☰ Menu e a lista Todos.
+Abra o menu e toque em Cadastrar novo item para mostrar o formulário.
+Cadastre uma obra em cada status e escolha as categorias para conferir os tópicos.
+Cadastre um Filme em Assistindo com 30 minutos e uma Série em Quero assistir com 0 episódios.
+Confira que cada obra aparece no tópico certo e apenas nos status correspondentes (ou em Todos).
+Teste fechar o menu tocando fora, em × e usando Voltar no Android.
 Edite uma obra: o status e o progresso devem mudar sem duplicar o cadastro.
 Cadastre um Livro e confira o tópico Livros e o progresso por páginas.
 Feche e reabra o projeto no Expo Go para conferir que as obras foram mantidas.
 Escolha uma capa, salve e confira a imagem ao lado da obra. Teste trocar, remover
 e cancelar a edição. Feche e reabra para confirmar que a capa foi mantida.
-O guia ETAPA-5.md explica os conceitos e mostra o código completo dos arquivos.
+O guia ETAPA-6.md explica os conceitos e mostra o código completo dos arquivos alterados.
 Para parar o servidor, pressione Ctrl+C no terminal.
 
 O GitHub guarda o código e seu histórico; ele não instala o app no celular.
@@ -64,8 +71,9 @@ computador será preparada em uma etapa posterior.
 - obras.js: opções, validação, migração dos dados antigos e atualização da lista.
 - Capa.js: exibição da imagem, com indicação quando não há capa ou ela falha.
 - capas.js: cópia das imagens para documentos e limpeza das capas substituídas.
-- Secao.js: cabeçalho que abre e fecha seu conteúdo, com contagem e acessibilidade.
-- ListaObras.js: lista agrupada em Livros, Mangás e Manhwas, com capa e edição.
+- MenuLateral.js: menu animado com seleção, contagem e fechamento pelo botão Voltar.
+- ListaObras.js: lista agrupada pelos cinco tipos, com capa e edição.
+- Secao.js: componente da etapa anterior, preservado como referência; não é usado pela tela atual.
 - index.js: registra o componente no Expo.
 - app.json: configura nome, orientação e aparência.
 - package.json: dependências e comandos.

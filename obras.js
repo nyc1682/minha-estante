@@ -8,12 +8,42 @@ export const TIPOS = [
   { valor: 'manga', texto: 'Mangá' },
   { valor: 'manhwa', texto: 'Manhwa' },
   { valor: 'livro', texto: 'Livro' },
+  { valor: 'filme', texto: 'Filme' },
+  { valor: 'serie', texto: 'Série' },
 ];
 
 export const UNIDADES = [
   { valor: 'capitulo', texto: 'Capítulos' },
   { valor: 'pagina', texto: 'Páginas' },
+  { valor: 'minuto', texto: 'Minutos' },
+  { valor: 'episodio', texto: 'Episódios' },
 ];
+
+export function unidadePadrao(tipo) {
+  return { livro: 'pagina', filme: 'minuto', serie: 'episodio' }[tipo] ?? 'capitulo';
+}
+
+export function opcoesStatus(tipo) {
+  const audiovisual = tipo === 'filme' || tipo === 'serie';
+  return STATUS.map((item) => ({
+    ...item,
+    texto: audiovisual && item.valor === 'lendo' ? 'Assistindo'
+      : audiovisual && item.valor === 'quero-ler' ? 'Quero assistir' : item.texto,
+  }));
+}
+
+export function opcoesUnidades(tipo) {
+  const permitidas = tipo === 'filme' ? ['minuto']
+    : tipo === 'serie' ? ['episodio', 'minuto'] : ['capitulo', 'pagina'];
+  return UNIDADES.filter((item) => permitidas.includes(item.valor));
+}
+
+export function rotuloProgresso(unidade) {
+  return {
+    capitulo: 'Último capítulo lido', pagina: 'Última página lida',
+    minuto: 'Minutos assistidos', episodio: 'Último episódio assistido',
+  }[unidade];
+}
 
 export function validarCadastro(titulo, progresso, unidade = 'capitulo') {
   if (!titulo.trim()) return 'Digite o nome da obra.';
@@ -22,8 +52,8 @@ export function validarCadastro(titulo, progresso, unidade = 'capitulo') {
   if (!/^\d+(\.\d+)?$/.test(texto) || !Number.isFinite(numero) || numero > Number.MAX_SAFE_INTEGER) {
     return 'Informe um progresso válido, como 0 ou 12.';
   }
-  if (unidade === 'pagina' && !Number.isSafeInteger(numero)) {
-    return 'Informe uma página inteira, como 0 ou 12.';
+  if (['pagina', 'episodio'].includes(unidade) && !Number.isSafeInteger(numero)) {
+    return 'Informe um número inteiro, como 0 ou 12.';
   }
   return null;
 }
@@ -38,7 +68,7 @@ export function lerObras(texto) {
       id: obra.id, titulo: obra.titulo, tipo: obra.tipo,
       status: obra.status === 'pausado' ? 'lendo' : obra.status,
       progresso: obra.progresso !== undefined ? obra.progresso : obra.capitulo,
-      unidade: obra.unidade ?? (obra.tipo === 'livro' ? 'pagina' : 'capitulo'),
+      unidade: obra.unidade ?? unidadePadrao(obra.tipo),
       capa: typeof obra.capa === 'string' && obra.capa.startsWith('file://') ? obra.capa : null,
     };
   });
@@ -52,7 +82,7 @@ export function lerObras(texto) {
       && UNIDADES.some((unidade) => unidade.valor === obra.unidade)
       && Number.isFinite(obra.progresso) && obra.progresso >= 0
       && obra.progresso <= Number.MAX_SAFE_INTEGER
-      && (obra.unidade !== 'pagina' || Number.isSafeInteger(obra.progresso));
+      && (!['pagina', 'episodio'].includes(obra.unidade) || Number.isSafeInteger(obra.progresso));
   })) {
     throw new Error('Dados da estante inválidos.');
   }

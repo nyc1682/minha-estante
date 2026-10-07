@@ -8,18 +8,19 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Opcoes from './Opcoes';
-import Secao from './Secao';
+import MenuLateral from './MenuLateral';
 import ListaObras from './ListaObras';
 import Capa from './Capa';
 import { apagarCapa, guardarCapa } from './capas';
-import { atualizarLista, lerObras, STATUS, TIPOS, UNIDADES, validarCadastro } from './obras';
+import { atualizarLista, lerObras, opcoesStatus, opcoesUnidades, rotuloProgresso,
+  TIPOS, unidadePadrao, validarCadastro } from './obras';
 
 const CHAVE_ESTANTE = '@minha-estante/obras-v1';
 const SECOES = [
   { valor: 'todos', texto: 'Todos' },
   { valor: 'concluido', texto: 'Terminei' },
-  { valor: 'lendo', texto: 'Lendo' },
-  { valor: 'quero-ler', texto: 'Quero ler' },
+  { valor: 'lendo', texto: 'Lendo / assistindo' },
+  { valor: 'quero-ler', texto: 'Quero ler / assistir' },
 ];
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
   const [capa, setCapa] = useState(null);
   const [escolhendoCapa, setEscolhendoCapa] = useState(false);
   const [secaoAberta, setSecaoAberta] = useState('todos');
+  const [menuAberto, setMenuAberto] = useState(false);
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [pronto, setPronto] = useState(false);
@@ -67,14 +69,18 @@ export default function App() {
   }
 
   function selecionarTipo(novoTipo) {
+    if (novoTipo === tipo) return;
     setTipo(novoTipo);
-    setUnidade(novoTipo === 'livro' ? 'pagina' : 'capitulo');
+    setUnidade(unidadePadrao(novoTipo));
+    setProgresso('0');
   }
 
-  function alternarSecao(secao) {
+  function selecionarSecao(secao) {
     if (bloqueio.current || seletorAberto.current) return;
-    setSecaoAberta((atual) => atual === secao ? null : secao);
+    setSecaoAberta(secao);
+    if (pronto) setMensagem('');
     Keyboard.dismiss();
+    rolagem.current?.scrollTo({ y: 0, animated: false });
   }
 
   function editarObra(obra) {
@@ -101,6 +107,7 @@ export default function App() {
     setUnidade('capitulo');
     setCapa(null);
     setMensagem('');
+    setSecaoAberta('todos');
     Keyboard.dismiss();
   }
 
@@ -169,20 +176,38 @@ export default function App() {
   }
 
   const ocupado = salvando || escolhendoCapa;
+  const itensVisiveis = obras.filter((obra) => secaoAberta === 'todos' || obra.status === secaoAberta);
+  const opcoesMenu = [
+    { valor: 'cadastro', texto: editandoId === null ? 'Cadastrar novo item' : 'Continuar edição' },
+    ...SECOES.map((secao) => ({ ...secao,
+      total: obras.filter((obra) => secao.valor === 'todos' || obra.status === secao.valor).length })),
+  ];
+  const nomeSecao = secaoAberta === 'cadastro'
+    ? editandoId === null ? 'Cadastrar novo item' : 'Editar item'
+    : SECOES.find((secao) => secao.valor === secaoAberta).texto;
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.tela}>
         <StatusBar style="light" />
+        <View style={styles.cabecalho}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Abrir menu"
+            accessibilityState={{ expanded: menuAberto, disabled: ocupado }} disabled={ocupado}
+            onPress={() => { Keyboard.dismiss(); setMenuAberto(true); }}
+            style={({ pressed }) => [styles.botaoMenu, (pressed || ocupado) && styles.atenuado]}>
+            <Text style={styles.textoSecundario}>☰ Menu</Text>
+          </Pressable>
+          <Text style={styles.marca}>Minha Estante</Text>
+        </View>
+        <MenuLateral aberto={menuAberto} aoFechar={() => setMenuAberto(false)}
+          aoSelecionar={selecionarSecao} selecionado={secaoAberta} opcoes={opcoesMenu} />
         <KeyboardAvoidingView style={styles.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView ref={rolagem} contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
-            <Text style={styles.etiqueta}>MANGÁS, MANHWAS E LIVROS</Text>
-            <Text style={styles.titulo} accessibilityRole="header">Minha Estante</Text>
-            <Text style={styles.descricao}>Toque em uma seção para abrir ou fechar.</Text>
+            <Text style={styles.etiqueta}>LEITURAS, FILMES E SÉRIES</Text>
+            <Text style={styles.titulo} accessibilityRole="header">{nomeSecao}</Text>
+            {secaoAberta !== 'cadastro' && <Text style={styles.descricao}>{itensVisiveis.length} obra(s) nesta categoria</Text>}
 
-            <Secao titulo={editandoId === null ? 'Cadastrar novo item' : 'Editar item'}
-              aberta={secaoAberta === 'cadastro'} aoAlternar={() => alternarSecao('cadastro')}
-              desabilitada={ocupado}>
+            {secaoAberta === 'cadastro' && (
             <View style={styles.cartao}>
               <Text style={styles.subtitulo} accessibilityRole="header">
                 {editandoId === null ? 'Adicionar obra' : 'Editar obra'}
@@ -215,17 +240,21 @@ export default function App() {
               <Text style={styles.ajuda}>Escolha uma imagem da galeria. A capa será guardada ao salvar a obra.</Text>
               <Text style={styles.rotulo}>Tipo</Text>
               <Opcoes grupo="Tipo" opcoes={TIPOS} valor={tipo} aoSelecionar={selecionarTipo} desabilitado={ocupado} />
-              <Text style={styles.rotulo}>Status da leitura</Text>
-              <Opcoes grupo="Status" opcoes={STATUS} valor={status} aoSelecionar={setStatus} desabilitado={ocupado} />
+              <Text style={styles.rotulo}>Status</Text>
+              <Opcoes grupo="Status" opcoes={opcoesStatus(tipo)} valor={status} aoSelecionar={setStatus} desabilitado={ocupado} />
               <Text style={styles.rotulo}>Acompanhar por</Text>
-              <Opcoes grupo="Progresso" opcoes={UNIDADES} valor={unidade} aoSelecionar={setUnidade} desabilitado={ocupado} />
-              <Text style={styles.rotulo}>{unidade === 'pagina' ? 'Última página lida' : 'Último capítulo lido'}</Text>
+              <Opcoes grupo="Progresso" opcoes={opcoesUnidades(tipo)} valor={unidade}
+                aoSelecionar={(novaUnidade) => {
+                  if (novaUnidade === unidade) return;
+                  setUnidade(novaUnidade); setProgresso('0');
+                }} desabilitado={ocupado} />
+              <Text style={styles.rotulo}>{rotuloProgresso(unidade)}</Text>
               <TextInput
-                accessibilityLabel={unidade === 'pagina' ? 'Última página lida' : 'Último capítulo lido'} style={styles.campo}
-                value={progresso} onChangeText={setProgresso} keyboardType={unidade === 'pagina' ? 'number-pad' : 'decimal-pad'}
+                accessibilityLabel={rotuloProgresso(unidade)} style={styles.campo}
+                value={progresso} onChangeText={setProgresso} keyboardType={['pagina', 'episodio'].includes(unidade) ? 'number-pad' : 'decimal-pad'}
                 maxLength={12} editable={!ocupado} selectTextOnFocus
               />
-              <Text style={styles.ajuda}>Use 0 se você ainda não começou a ler.</Text>
+              <Text style={styles.ajuda}>Use 0 se ainda não começou. Trocar o tipo ou a unidade reinicia este campo.</Text>
               <Pressable
                 accessibilityRole="button" disabled={!pronto || ocupado}
                 accessibilityState={{ disabled: !pronto || ocupado }}
@@ -243,7 +272,7 @@ export default function App() {
                 </Pressable>
               )}
             </View>
-            </Secao>
+            )}
 
             {mensagem !== '' && <Text style={styles.mensagem} accessibilityLiveRegion="polite">{mensagem}</Text>}
             {carregando && <Text style={styles.descricao}>Carregando sua estante…</Text>}
@@ -252,16 +281,9 @@ export default function App() {
                 <Text style={styles.textoBotao}>Tentar carregar novamente</Text>
               </Pressable>
             )}
-            {SECOES.map((secao) => {
-              const itens = obras.filter((obra) => secao.valor === 'todos' || obra.status === secao.valor);
-              return (
-                <Secao key={secao.valor} titulo={secao.texto} total={itens.length}
-                  aberta={secaoAberta === secao.valor} aoAlternar={() => alternarSecao(secao.valor)}
-                  desabilitada={ocupado}>
-                  {pronto && <ListaObras obras={itens} aoEditar={editarObra} ocupado={ocupado} />}
-                </Secao>
-              );
-            })}
+            {pronto && secaoAberta !== 'cadastro' && (
+              <ListaObras obras={itensVisiveis} aoEditar={editarObra} ocupado={ocupado} />
+            )}
             <Text style={styles.ajuda}>Seus cadastros ficam salvos neste celular.</Text>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -272,6 +294,11 @@ export default function App() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: '#101218' },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderColor: '#353B4B' },
+  botaoMenu: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 12,
+    borderWidth: 1, borderColor: '#B8A7FF', borderRadius: 12 },
+  marca: { flex: 1, color: '#F5F6FA', fontSize: 22, fontWeight: '700' },
   conteudo: { padding: 24, paddingBottom: 40, gap: 16 },
   etiqueta: { color: '#B8A7FF', fontSize: 14, fontWeight: '700' },
   titulo: { color: '#F5F6FA', fontSize: 32, fontWeight: '700' },
