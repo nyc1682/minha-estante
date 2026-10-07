@@ -8,13 +8,19 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Opcoes from './Opcoes';
+import Secao from './Secao';
+import ListaObras from './ListaObras';
 import Capa from './Capa';
 import { apagarCapa, guardarCapa } from './capas';
 import { atualizarLista, lerObras, STATUS, TIPOS, UNIDADES, validarCadastro } from './obras';
 
 const CHAVE_ESTANTE = '@minha-estante/obras-v1';
-const FILTROS = [{ valor: 'todos', texto: 'Todas' }, ...STATUS];
-const FILTROS_TIPO = [{ valor: 'todos', texto: 'Todos os tipos' }, ...TIPOS];
+const SECOES = [
+  { valor: 'todos', texto: 'Todos' },
+  { valor: 'concluido', texto: 'Terminei' },
+  { valor: 'lendo', texto: 'Lendo' },
+  { valor: 'quero-ler', texto: 'Quero ler' },
+];
 
 export default function App() {
   const [obras, setObras] = useState([]);
@@ -26,8 +32,7 @@ export default function App() {
   const [editandoId, setEditandoId] = useState(null);
   const [capa, setCapa] = useState(null);
   const [escolhendoCapa, setEscolhendoCapa] = useState(false);
-  const [filtro, setFiltro] = useState('todos');
-  const [filtroTipo, setFiltroTipo] = useState('todos');
+  const [secaoAberta, setSecaoAberta] = useState('todos');
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [pronto, setPronto] = useState(false);
@@ -66,6 +71,12 @@ export default function App() {
     setUnidade(novoTipo === 'livro' ? 'pagina' : 'capitulo');
   }
 
+  function alternarSecao(secao) {
+    if (bloqueio.current || seletorAberto.current) return;
+    setSecaoAberta((atual) => atual === secao ? null : secao);
+    Keyboard.dismiss();
+  }
+
   function editarObra(obra) {
     if (bloqueio.current || seletorAberto.current) return;
     setEditandoId(obra.id);
@@ -76,6 +87,7 @@ export default function App() {
     setUnidade(obra.unidade);
     setCapa(obra.capa);
     setMensagem('');
+    setSecaoAberta('cadastro');
     rolagem.current?.scrollTo({ y: 0, animated: true });
   }
 
@@ -143,8 +155,7 @@ export default function App() {
       setProgresso('0');
       setEditandoId(null);
       setCapa(null);
-      setFiltro('todos');
-      setFiltroTipo('todos');
+      setSecaoAberta(novaObra.status);
       setMensagem(`${novaObra.titulo}: ${editandoId === null ? 'cadastro adicionado' : 'alterações salvas'}.`);
       Keyboard.dismiss();
       if (capaAnterior && capaAnterior !== novaObra.capa) apagarCapa(capaAnterior);
@@ -157,9 +168,6 @@ export default function App() {
     }
   }
 
-  const obrasVisiveis = obras.filter((obra) =>
-    (filtro === 'todos' || obra.status === filtro)
-    && (filtroTipo === 'todos' || obra.tipo === filtroTipo));
   const ocupado = salvando || escolhendoCapa;
 
   return (
@@ -170,8 +178,11 @@ export default function App() {
           <ScrollView ref={rolagem} contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
             <Text style={styles.etiqueta}>MANGÁS, MANHWAS E LIVROS</Text>
             <Text style={styles.titulo} accessibilityRole="header">Minha Estante</Text>
-            <Text style={styles.descricao}>Organize o que você lê e o que quer ler.</Text>
+            <Text style={styles.descricao}>Toque em uma seção para abrir ou fechar.</Text>
 
+            <Secao titulo={editandoId === null ? 'Cadastrar novo item' : 'Editar item'}
+              aberta={secaoAberta === 'cadastro'} aoAlternar={() => alternarSecao('cadastro')}
+              desabilitada={ocupado}>
             <View style={styles.cartao}>
               <Text style={styles.subtitulo} accessibilityRole="header">
                 {editandoId === null ? 'Adicionar obra' : 'Editar obra'}
@@ -232,6 +243,7 @@ export default function App() {
                 </Pressable>
               )}
             </View>
+            </Secao>
 
             {mensagem !== '' && <Text style={styles.mensagem} accessibilityLiveRegion="polite">{mensagem}</Text>}
             {carregando && <Text style={styles.descricao}>Carregando sua estante…</Text>}
@@ -240,36 +252,16 @@ export default function App() {
                 <Text style={styles.textoBotao}>Tentar carregar novamente</Text>
               </Pressable>
             )}
-            <Text style={styles.subtitulo} accessibilityRole="header">Suas obras ({obras.length})</Text>
-            <Opcoes grupo="Categoria" opcoes={FILTROS} valor={filtro} aoSelecionar={setFiltro} />
-            <Text style={styles.rotulo}>Filtrar por tipo</Text>
-            <Opcoes grupo="Filtrar por tipo" opcoes={FILTROS_TIPO} valor={filtroTipo} aoSelecionar={setFiltroTipo} />
-            {pronto && obrasVisiveis.length === 0 && (
-              <Text style={styles.descricao}>
-                {obras.length === 0 ? 'Sua estante está vazia. Adicione sua primeira obra acima.' : 'Nenhuma obra nesta categoria.'}
-              </Text>
-            )}
-            {obrasVisiveis.map((obra) => (
-              <View key={obra.id} style={styles.cartao}>
-                <View style={styles.linhaCapa}>
-                  <Capa uri={obra.capa} titulo={obra.titulo} />
-                  <View style={styles.dadosObra}>
-                    <Text style={styles.subtitulo}>{obra.titulo}</Text>
-                    <Text style={styles.etiqueta}>
-                      {TIPOS.find((item) => item.valor === obra.tipo).texto} · {STATUS.find((item) => item.valor === obra.status).texto}
-                    </Text>
-                    <Text style={styles.descricao}>
-                      {obra.unidade === 'pagina' ? 'Última página' : 'Último capítulo'}: {String(obra.progresso).replace('.', ',')}
-                    </Text>
-                  </View>
-                </View>
-                <Pressable accessibilityRole="button" accessibilityLabel={`Editar ${obra.titulo}`}
-                  disabled={ocupado} onPress={() => editarObra(obra)}
-                  style={({ pressed }) => [styles.secundario, (pressed || ocupado) && styles.atenuado]}>
-                  <Text style={styles.textoSecundario}>Editar obra</Text>
-                </Pressable>
-              </View>
-            ))}
+            {SECOES.map((secao) => {
+              const itens = obras.filter((obra) => secao.valor === 'todos' || obra.status === secao.valor);
+              return (
+                <Secao key={secao.valor} titulo={secao.texto} total={itens.length}
+                  aberta={secaoAberta === secao.valor} aoAlternar={() => alternarSecao(secao.valor)}
+                  desabilitada={ocupado}>
+                  {pronto && <ListaObras obras={itens} aoEditar={editarObra} ocupado={ocupado} />}
+                </Secao>
+              );
+            })}
             <Text style={styles.ajuda}>Seus cadastros ficam salvos neste celular.</Text>
           </ScrollView>
         </KeyboardAvoidingView>

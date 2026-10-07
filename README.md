@@ -4,10 +4,17 @@ App para organizar mangás, manhwas e livros, desenvolvido em JavaScript, React 
 
 ## Etapa atual
 
-Etapa 4: capas da galeria, cadastro e edição, com os status Lendo, Quero ler e Já li.
+Etapa 5: tela organizada em uma coluna de seções que abrem e fecham.
+Seções: Cadastrar novo item, Todos, Terminei, Lendo e Quero ler.
+Cada lista mostra os tópicos Livros, Mangás e Manhwas com suas quantidades.
+Uma seção abre por vez; o cadastro começa fechado e Todos começa aberto.
+Os status são Lendo, Quero ler e Terminei (o mesmo concluído antes chamado Já li).
 Tipos: Mangá, Manhwa e Livro. Acompanhe o progresso por capítulos ou páginas.
 Toque em Editar obra, altere os campos e salve, ou cancele para descartar o rascunho.
-Filtre a lista por status e por tipo. Os dados ficam salvos no celular.
+Escolha a seção do status desejado e encontre as obras pelo tópico de tipo.
+Ao editar uma obra, o formulário abre automaticamente. Ao salvar, abre sua categoria.
+Fechar o formulário preserva os campos; Cancelar edição descarta o rascunho.
+Os dados ficam salvos no celular.
 Cadastros antigos em Pausado aparecem como Lendo, mantendo o progresso.
 Escolha uma capa opcional da galeria, veja a prévia e salve a obra.
 Uma cópia da imagem fica guardada no celular e aparece ao lado do título na lista.
@@ -36,13 +43,14 @@ Instale o Expo Go: https://expo.dev/go.
 Conecte o computador e o celular à mesma rede Wi-Fi.
 Abra o Expo Go e escaneie o QR code mostrado no terminal.
 Você deve ver “Minha Estante” e o formulário “Adicionar obra”.
-Cadastre uma obra em cada status e toque nas categorias para filtrar a lista.
+Toque em Cadastrar novo item para abrir o formulário.
+Cadastre uma obra em cada status e abra as categorias para conferir os tópicos.
 Edite uma obra: o status e o progresso devem mudar sem duplicar o cadastro.
-Cadastre um Livro e teste o filtro Livro e o progresso por páginas.
+Cadastre um Livro e confira o tópico Livros e o progresso por páginas.
 Feche e reabra o projeto no Expo Go para conferir que as obras foram mantidas.
 Escolha uma capa, salve e confira a imagem ao lado da obra. Teste trocar, remover
 e cancelar a edição. Feche e reabra para confirmar que a capa foi mantida.
-O guia ETAPA-4.md explica os conceitos e mostra o código completo dos arquivos.
+O guia ETAPA-5.md explica os conceitos e mostra o código completo dos arquivos.
 Para parar o servidor, pressione Ctrl+C no terminal.
 
 O GitHub guarda o código e seu histórico; ele não instala o app no celular.
@@ -56,6 +64,8 @@ computador será preparada em uma etapa posterior.
 - obras.js: opções, validação, migração dos dados antigos e atualização da lista.
 - Capa.js: exibição da imagem, com indicação quando não há capa ou ela falha.
 - capas.js: cópia das imagens para documentos e limpeza das capas substituídas.
+- Secao.js: cabeçalho que abre e fecha seu conteúdo, com contagem e acessibilidade.
+- ListaObras.js: lista agrupada em Livros, Mangás e Manhwas, com capa e edição.
 - index.js: registra o componente no Expo.
 - app.json: configura nome, orientação e aparência.
 - package.json: dependências e comandos.

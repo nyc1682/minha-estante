@@ -1,7 +1,7 @@
 export const STATUS = [
   { valor: 'lendo', texto: 'Lendo' },
   { valor: 'quero-ler', texto: 'Quero ler' },
-  { valor: 'concluido', texto: 'Já li' },
+  { valor: 'concluido', texto: 'Terminei' },
 ];
 
 export const TIPOS = [
