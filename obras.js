@@ -39,6 +39,7 @@ export function lerObras(texto) {
       status: obra.status === 'pausado' ? 'lendo' : obra.status,
       progresso: obra.progresso !== undefined ? obra.progresso : obra.capitulo,
       unidade: obra.unidade ?? (obra.tipo === 'livro' ? 'pagina' : 'capitulo'),
+      capa: typeof obra.capa === 'string' && obra.capa.startsWith('file://') ? obra.capa : null,
     };
   });
   const ids = new Set();

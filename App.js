@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
 import {
   Keyboard, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Opcoes from './Opcoes';
+import Capa from './Capa';
+import { apagarCapa, guardarCapa } from './capas';
 import { atualizarLista, lerObras, STATUS, TIPOS, UNIDADES, validarCadastro } from './obras';
 
 const CHAVE_ESTANTE = '@minha-estante/obras-v1';
@@ -21,6 +24,8 @@ export default function App() {
   const [progresso, setProgresso] = useState('0');
   const [unidade, setUnidade] = useState('capitulo');
   const [editandoId, setEditandoId] = useState(null);
+  const [capa, setCapa] = useState(null);
+  const [escolhendoCapa, setEscolhendoCapa] = useState(false);
   const [filtro, setFiltro] = useState('todos');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [mensagem, setMensagem] = useState('');
@@ -30,6 +35,7 @@ export default function App() {
   const [tentativa, setTentativa] = useState(0);
   const bloqueio = useRef(false);
   const rolagem = useRef(null);
+  const seletorAberto = useRef(false);
 
   useEffect(() => {
     let ativo = true;
@@ -61,31 +67,54 @@ export default function App() {
   }
 
   function editarObra(obra) {
-    if (bloqueio.current) return;
+    if (bloqueio.current || seletorAberto.current) return;
     setEditandoId(obra.id);
     setTitulo(obra.titulo);
     setTipo(obra.tipo);
     setStatus(obra.status);
     setProgresso(String(obra.progresso).replace('.', ','));
     setUnidade(obra.unidade);
+    setCapa(obra.capa);
     setMensagem('');
     rolagem.current?.scrollTo({ y: 0, animated: true });
   }
 
   function cancelarEdicao() {
-    if (bloqueio.current) return;
+    if (bloqueio.current || seletorAberto.current) return;
     setEditandoId(null);
     setTitulo('');
     setTipo('manga');
     setStatus('lendo');
     setProgresso('0');
     setUnidade('capitulo');
+    setCapa(null);
     setMensagem('');
     Keyboard.dismiss();
   }
 
+  async function escolherCapa() {
+    if (bloqueio.current || seletorAberto.current) return;
+    seletorAberto.current = true;
+    setEscolhendoCapa(true);
+    setMensagem('');
+    Keyboard.dismiss();
+    try {
+      const resultado = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'], allowsEditing: true, aspect: [2, 3], quality: 0.75,
+      });
+      if (!resultado.canceled && resultado.assets?.[0]?.uri) {
+        setCapa(resultado.assets[0].uri);
+      }
+    } catch {
+      setMensagem('Não foi possível abrir a imagem. Tente escolher outra capa.');
+    } finally {
+      seletorAberto.current = false;
+      setEscolhendoCapa(false);
+    }
+  }
+
   async function salvarObra() {
-    if (!pronto || bloqueio.current) return;
+    if (!pronto || bloqueio.current || seletorAberto.current) return;
     const erro = validarCadastro(titulo, progresso, unidade);
     if (erro) {
       setMensagem(erro);
@@ -98,19 +127,29 @@ export default function App() {
       id: editandoId ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       titulo: titulo.trim(), tipo, status,
       progresso: Number(progresso.trim().replace(',', '.')), unidade,
+      capa,
     };
+    const capaAnterior = obras.find((obra) => obra.id === editandoId)?.capa ?? null;
+    let capaCopiada = null;
     try {
+      if (capa && capa !== capaAnterior) {
+        capaCopiada = await guardarCapa(capa);
+        novaObra.capa = capaCopiada;
+      }
       const novasObras = atualizarLista(obras, novaObra, editandoId);
       await AsyncStorage.setItem(CHAVE_ESTANTE, JSON.stringify(novasObras));
       setObras(novasObras);
       setTitulo('');
       setProgresso('0');
       setEditandoId(null);
+      setCapa(null);
       setFiltro('todos');
       setFiltroTipo('todos');
       setMensagem(`${novaObra.titulo}: ${editandoId === null ? 'cadastro adicionado' : 'alterações salvas'}.`);
       Keyboard.dismiss();
+      if (capaAnterior && capaAnterior !== novaObra.capa) apagarCapa(capaAnterior);
     } catch {
+      apagarCapa(capaCopiada);
       setMensagem('Não foi possível salvar. Seus campos foram mantidos; tente novamente.');
     } finally {
       bloqueio.current = false;
@@ -121,6 +160,7 @@ export default function App() {
   const obrasVisiveis = obras.filter((obra) =>
     (filtro === 'todos' || obra.status === filtro)
     && (filtroTipo === 'todos' || obra.tipo === filtroTipo));
+  const ocupado = salvando || escolhendoCapa;
 
   return (
     <SafeAreaProvider>
@@ -141,34 +181,53 @@ export default function App() {
               <TextInput
                 accessibilityLabel="Nome da obra" style={styles.campo}
                 value={titulo} onChangeText={setTitulo} placeholder="Ex.: Solo Leveling"
-                placeholderTextColor="#AAB1C1" maxLength={150} editable={!salvando}
+                placeholderTextColor="#AAB1C1" maxLength={150} editable={!ocupado}
               />
+              <Text style={styles.rotulo}>Capa da obra (opcional)</Text>
+              <View style={styles.linhaCapa}>
+                <Capa uri={capa} titulo={titulo} grande />
+                <View style={styles.dadosObra}>
+                  <Pressable accessibilityRole="button" disabled={ocupado} onPress={escolherCapa}
+                    style={({ pressed }) => [styles.secundario, (pressed || ocupado) && styles.atenuado]}>
+                    <Text style={styles.textoSecundario}>
+                      {escolhendoCapa ? 'Abrindo galeria…' : capa ? 'Trocar capa' : 'Escolher capa'}
+                    </Text>
+                  </Pressable>
+                  {capa && (
+                    <Pressable accessibilityRole="button" disabled={ocupado} onPress={() => setCapa(null)}
+                      style={({ pressed }) => [styles.secundario, (pressed || ocupado) && styles.atenuado]}>
+                      <Text style={styles.textoSecundario}>Remover capa</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+              <Text style={styles.ajuda}>Escolha uma imagem da galeria. A capa será guardada ao salvar a obra.</Text>
               <Text style={styles.rotulo}>Tipo</Text>
-              <Opcoes grupo="Tipo" opcoes={TIPOS} valor={tipo} aoSelecionar={selecionarTipo} desabilitado={salvando} />
+              <Opcoes grupo="Tipo" opcoes={TIPOS} valor={tipo} aoSelecionar={selecionarTipo} desabilitado={ocupado} />
               <Text style={styles.rotulo}>Status da leitura</Text>
-              <Opcoes grupo="Status" opcoes={STATUS} valor={status} aoSelecionar={setStatus} desabilitado={salvando} />
+              <Opcoes grupo="Status" opcoes={STATUS} valor={status} aoSelecionar={setStatus} desabilitado={ocupado} />
               <Text style={styles.rotulo}>Acompanhar por</Text>
-              <Opcoes grupo="Progresso" opcoes={UNIDADES} valor={unidade} aoSelecionar={setUnidade} desabilitado={salvando} />
+              <Opcoes grupo="Progresso" opcoes={UNIDADES} valor={unidade} aoSelecionar={setUnidade} desabilitado={ocupado} />
               <Text style={styles.rotulo}>{unidade === 'pagina' ? 'Última página lida' : 'Último capítulo lido'}</Text>
               <TextInput
                 accessibilityLabel={unidade === 'pagina' ? 'Última página lida' : 'Último capítulo lido'} style={styles.campo}
                 value={progresso} onChangeText={setProgresso} keyboardType={unidade === 'pagina' ? 'number-pad' : 'decimal-pad'}
-                maxLength={12} editable={!salvando} selectTextOnFocus
+                maxLength={12} editable={!ocupado} selectTextOnFocus
               />
               <Text style={styles.ajuda}>Use 0 se você ainda não começou a ler.</Text>
               <Pressable
-                accessibilityRole="button" disabled={!pronto || salvando}
-                accessibilityState={{ disabled: !pronto || salvando }}
+                accessibilityRole="button" disabled={!pronto || ocupado}
+                accessibilityState={{ disabled: !pronto || ocupado }}
                 onPress={salvarObra}
-                style={({ pressed }) => [styles.adicionar, (!pronto || salvando || pressed) && styles.atenuado]}
+                style={({ pressed }) => [styles.adicionar, (!pronto || ocupado || pressed) && styles.atenuado]}
               >
                 <Text style={styles.textoBotao}>
                   {salvando ? 'Salvando…' : editandoId === null ? 'Adicionar à estante' : 'Salvar alterações'}
                 </Text>
               </Pressable>
               {editandoId !== null && (
-                <Pressable accessibilityRole="button" disabled={salvando} onPress={cancelarEdicao}
-                  style={({ pressed }) => [styles.secundario, (pressed || salvando) && styles.atenuado]}>
+                <Pressable accessibilityRole="button" disabled={ocupado} onPress={cancelarEdicao}
+                  style={({ pressed }) => [styles.secundario, (pressed || ocupado) && styles.atenuado]}>
                   <Text style={styles.textoSecundario}>Cancelar edição</Text>
                 </Pressable>
               )}
@@ -192,16 +251,21 @@ export default function App() {
             )}
             {obrasVisiveis.map((obra) => (
               <View key={obra.id} style={styles.cartao}>
-                <Text style={styles.subtitulo}>{obra.titulo}</Text>
-                <Text style={styles.etiqueta}>
-                  {TIPOS.find((item) => item.valor === obra.tipo).texto} · {STATUS.find((item) => item.valor === obra.status).texto}
-                </Text>
-                <Text style={styles.descricao}>
-                  {obra.unidade === 'pagina' ? 'Última página' : 'Último capítulo'}: {String(obra.progresso).replace('.', ',')}
-                </Text>
+                <View style={styles.linhaCapa}>
+                  <Capa uri={obra.capa} titulo={obra.titulo} />
+                  <View style={styles.dadosObra}>
+                    <Text style={styles.subtitulo}>{obra.titulo}</Text>
+                    <Text style={styles.etiqueta}>
+                      {TIPOS.find((item) => item.valor === obra.tipo).texto} · {STATUS.find((item) => item.valor === obra.status).texto}
+                    </Text>
+                    <Text style={styles.descricao}>
+                      {obra.unidade === 'pagina' ? 'Última página' : 'Último capítulo'}: {String(obra.progresso).replace('.', ',')}
+                    </Text>
+                  </View>
+                </View>
                 <Pressable accessibilityRole="button" accessibilityLabel={`Editar ${obra.titulo}`}
-                  disabled={salvando} onPress={() => editarObra(obra)}
-                  style={({ pressed }) => [styles.secundario, (pressed || salvando) && styles.atenuado]}>
+                  disabled={ocupado} onPress={() => editarObra(obra)}
+                  style={({ pressed }) => [styles.secundario, (pressed || ocupado) && styles.atenuado]}>
                   <Text style={styles.textoSecundario}>Editar obra</Text>
                 </Pressable>
               </View>
@@ -238,4 +302,6 @@ const styles = StyleSheet.create({
   textoSecundario: { color: '#E4DBFF', fontSize: 16, fontWeight: '600' },
   atenuado: { opacity: 0.6 },
   mensagem: { color: '#E4DBFF', fontSize: 16, lineHeight: 24 },
+  linhaCapa: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  dadosObra: { flex: 1, minWidth: 0, gap: 12 },
 });

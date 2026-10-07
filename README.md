@@ -4,11 +4,15 @@ App para organizar mangás, manhwas e livros, desenvolvido em JavaScript, React 
 
 ## Etapa atual
 
-Etapa 3: cadastro e edição de obras, com os status Lendo, Quero ler e Já li.
+Etapa 4: capas da galeria, cadastro e edição, com os status Lendo, Quero ler e Já li.
 Tipos: Mangá, Manhwa e Livro. Acompanhe o progresso por capítulos ou páginas.
 Toque em Editar obra, altere os campos e salve, ou cancele para descartar o rascunho.
 Filtre a lista por status e por tipo. Os dados ficam salvos no celular.
 Cadastros antigos em Pausado aparecem como Lendo, mantendo o progresso.
+Escolha uma capa opcional da galeria, veja a prévia e salve a obra.
+Uma cópia da imagem fica guardada no celular e aparece ao lado do título na lista.
+Na edição, você pode trocar ou remover a capa; cancelar mantém a imagem salva.
+Obras antigas continuam funcionando sem capa. Não há busca automática nesta etapa.
 Exclusão e busca serão adicionadas após confirmar o teste desta etapa.
 
 ## Abrir no Windows
@@ -36,7 +40,9 @@ Cadastre uma obra em cada status e toque nas categorias para filtrar a lista.
 Edite uma obra: o status e o progresso devem mudar sem duplicar o cadastro.
 Cadastre um Livro e teste o filtro Livro e o progresso por páginas.
 Feche e reabra o projeto no Expo Go para conferir que as obras foram mantidas.
-O guia ETAPA-3.md explica os conceitos e mostra o código completo dos arquivos.
+Escolha uma capa, salve e confira a imagem ao lado da obra. Teste trocar, remover
+e cancelar a edição. Feche e reabra para confirmar que a capa foi mantida.
+O guia ETAPA-4.md explica os conceitos e mostra o código completo dos arquivos.
 Para parar o servidor, pressione Ctrl+C no terminal.
 
 O GitHub guarda o código e seu histórico; ele não instala o app no celular.
@@ -48,6 +54,8 @@ computador será preparada em uma etapa posterior.
 - App.js: formulário, lista, estado React, carregamento e gravação local.
 - Opcoes.js: botões reutilizáveis de tipo, status e categorias.
 - obras.js: opções, validação, migração dos dados antigos e atualização da lista.
+- Capa.js: exibição da imagem, com indicação quando não há capa ou ela falha.
+- capas.js: cópia das imagens para documentos e limpeza das capas substituídas.
 - index.js: registra o componente no Expo.
 - app.json: configura nome, orientação e aparência.
 - package.json: dependências e comandos.
@@ -61,6 +69,9 @@ A edição sem duplicação, migração de Pausado para Lendo, tipos, progresso 
 leitura dos dados salvos foram verificados. Páginas aceitam números inteiros;
 capítulos também aceitam decimais. Títulos vazios e valores inválidos são rejeitados.
 O teste visual e a persistência em um celular físico ainda precisam ser confirmados.
+Os fluxos de cópia, falha de cópia, limpeza restrita e preservação do cadastro
+foram verificados com um sistema de arquivos simulado. Galeria e arquivos nativos
+precisam ser testados no Android físico.
 Não há TypeScript nesta versão. ESLint é uma ferramenta de desenvolvimento.
 
 O npm audit reporta 22 alertas nas dependências transitivas do template.
