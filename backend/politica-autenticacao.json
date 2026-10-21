@@ -1,0 +1,30 @@
+{
+  "signIn": {
+    "email": {
+      "enabled": true,
+      "passwordRequired": true
+    },
+    "anonymous": {
+      "enabled": false
+    }
+  },
+  "passwordPolicyConfig": {
+    "passwordPolicyEnforcementState": "ENFORCE",
+    "forceUpgradeOnSignin": false,
+    "passwordPolicyVersions": [
+      {
+        "customStrengthOptions": {
+          "minPasswordLength": 8,
+          "maxPasswordLength": 128,
+          "containsLowercaseCharacter": false,
+          "containsUppercaseCharacter": true,
+          "containsNumericCharacter": true,
+          "containsNonAlphanumericCharacter": true
+        }
+      }
+    ]
+  },
+  "emailPrivacyConfig": {
+    "enableImprovedEmailPrivacy": true
+  }
+}

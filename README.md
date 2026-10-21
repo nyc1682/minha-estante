@@ -55,6 +55,7 @@ minha-estante/
 
 ## Documentação
 
+- [Contas, login e confirmação de e-mail](docs/autenticacao.md)
 - [Instalar e gerar o APK](docs/instalacao.md)
 - [Desenvolver e verificar o projeto](docs/desenvolvimento.md)
 - [Guias de aprendizado por etapa](docs/README.md)

@@ -2,6 +2,7 @@
 
 ## Para usar ou desenvolver
 
+- [Contas, login e confirmação de e-mail](autenticacao.md)
 - [Instalação no Android e geração do APK](instalacao.md)
 - [Ambiente Windows, comandos e verificação](desenvolvimento.md)
 - [Organização dos arquivos e conceitos de importação](organizacao.md)
@@ -19,5 +20,6 @@ Os guias abaixo registram como o app foi construído. Seus trechos de código e 
 | [5](guias/ETAPA-5.md) | Listas agrupadas e seções expansíveis |
 | [6](guias/ETAPA-6.md) | Menu lateral, filmes e séries |
 | [7](guias/ETAPA-7.md) | Compilação do APK Android |
+| [8](guias/ETAPA-8.md) | Cadastro, login e confirmação de e-mail |
 
 As seções expansíveis da etapa 5 foram substituídas pelo menu lateral. O componente antigo foi removido do código atual; seu exemplo continua preservado no guia e no histórico Git.
