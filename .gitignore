@@ -29,6 +29,12 @@ credentials.json
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+firebase-debug*.log
+ui-debug.log
+work/
+.firebase/
+*-emulator-data/
+*.service-account.json
 
 # macOS
 .DS_Store

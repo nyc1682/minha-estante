@@ -21,10 +21,11 @@ No Android, abra o projeto pelo Expo Go, com computador e celular na mesma rede 
 
 ```powershell
 npm.cmd run lint
+npm.cmd test
 npx.cmd expo export --platform android --output-dir dist
 ```
 
-O primeiro comando analisa o JavaScript. O segundo gera o pacote JavaScript Android e verifica se os imports são resolvidos; ele não gera um APK. A pasta dist é ignorada pelo Git. Esta versão usa apenas JavaScript, sem configuração TypeScript.
+O lint analisa o JavaScript e os testes verificam as regras de busca. O último comando gera o pacote JavaScript Android e verifica se os imports são resolvidos; ele não gera um APK. A pasta dist é ignorada pelo Git. Esta versão usa apenas JavaScript, sem configuração TypeScript.
 
 Após mudar o código, teste no celular: cadastro, edição sem duplicar, troca de status, progresso, capas e fechamento do menu. Feche e reabra o app para verificar os dados salvos.
 
@@ -50,7 +51,6 @@ Na preparação da versão 1.0.0 foram registrados alertas em dependências tran
 
 ## Próximas funcionalidades previstas
 
-- Buscar obras pelo título.
 - Excluir uma obra com confirmação.
 - Exportar e importar a estante para facilitar backup e transferência.
 

@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import {
-  Keyboard, KeyboardAvoidingView, Platform, Pressable,
+  Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -12,10 +11,11 @@ import MenuLateral from './src/components/MenuLateral';
 import ListaObras from './src/components/ListaObras';
 import Capa from './src/components/Capa';
 import { apagarCapa, guardarCapa } from './src/services/capas';
-import { atualizarLista, lerObras, opcoesStatus, opcoesUnidades, rotuloProgresso,
+import { importarEstanteAntiga, lerEstante, salvarEstante } from './src/services/estante';
+import { useConta } from './src/context/ContaContext';
+import { atualizarLista, filtrarObras, opcoesStatus, opcoesUnidades, rotuloProgresso,
   TIPOS, unidadePadrao, validarCadastro } from './src/utils/obras';
 
-const CHAVE_ESTANTE = '@minha-estante/obras-v1';
 const SECOES = [
   { valor: 'todos', texto: 'Todos' },
   { valor: 'concluido', texto: 'Terminei' },
@@ -24,8 +24,11 @@ const SECOES = [
 ];
 
 export default function App() {
+  const { usuario, sair, ocupado: contaOcupada } = useConta();
+  const uid = usuario.uid;
   const [obras, setObras] = useState([]);
   const [titulo, setTitulo] = useState('');
+  const [busca, setBusca] = useState('');
   const [tipo, setTipo] = useState('manga');
   const [status, setStatus] = useState('lendo');
   const [progresso, setProgresso] = useState('0');
@@ -40,17 +43,18 @@ export default function App() {
   const [pronto, setPronto] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [tentativa, setTentativa] = useState(0);
+  const [temLegado, setTemLegado] = useState(false);
   const bloqueio = useRef(false);
   const rolagem = useRef(null);
   const seletorAberto = useRef(false);
 
   useEffect(() => {
     let ativo = true;
-    AsyncStorage.getItem(CHAVE_ESTANTE)
-      .then((texto) => {
-        const salvas = lerObras(texto);
+    lerEstante(uid)
+      .then(({ obras: salvas, temLegado: legado }) => {
         if (ativo) {
           setObras(salvas);
+          setTemLegado(legado);
           setPronto(true);
           setMensagem('');
         }
@@ -60,12 +64,45 @@ export default function App() {
       })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [tentativa]);
+  }, [tentativa, uid]);
 
   function tentarCarregar() {
     setCarregando(true);
     setPronto(false);
     setTentativa((anterior) => anterior + 1);
+  }
+
+  function pedirImportacao() {
+    if (bloqueio.current || seletorAberto.current || !pronto) return;
+    Alert.alert('Importar estante anterior?',
+      `Os cadastros da versão sem login serão vinculados a ${usuario.email} neste aparelho. Confirme somente se esses cadastros forem seus.`,
+      [{ text: 'Cancelar', style: 'cancel' }, { text: 'Importar', onPress: importarLegado }]);
+  }
+
+  async function importarLegado() {
+    if (bloqueio.current || seletorAberto.current || !pronto) return;
+    bloqueio.current = true;
+    setSalvando(true);
+    try {
+      const importadas = await importarEstanteAntiga(uid, obras);
+      setObras(importadas);
+      setTemLegado(false);
+      setMensagem('Estante anterior importada para esta conta neste aparelho.');
+    } catch {
+      setMensagem('Não foi possível importar agora. Tente novamente; a estante anterior foi preservada.');
+    } finally {
+      bloqueio.current = false;
+      setSalvando(false);
+    }
+  }
+
+  function pedirSaida() {
+    if (bloqueio.current || seletorAberto.current || contaOcupada) return;
+    Alert.alert('Sair da conta?', 'Sua estante continuará guardada neste aparelho. Para entrar novamente, você precisará de internet.',
+      [{ text: 'Cancelar', style: 'cancel' }, { text: 'Sair', onPress: async () => {
+        const sucesso = await sair();
+        if (!sucesso) setMensagem('Não foi possível sair da conta. Tente novamente.');
+      } }]);
   }
 
   function selecionarTipo(novoTipo) {
@@ -156,12 +193,13 @@ export default function App() {
         novaObra.capa = capaCopiada;
       }
       const novasObras = atualizarLista(obras, novaObra, editandoId);
-      await AsyncStorage.setItem(CHAVE_ESTANTE, JSON.stringify(novasObras));
+      await salvarEstante(uid, novasObras);
       setObras(novasObras);
       setTitulo('');
       setProgresso('0');
       setEditandoId(null);
       setCapa(null);
+      setBusca('');
       setSecaoAberta(novaObra.status);
       setMensagem(`${novaObra.titulo}: ${editandoId === null ? 'cadastro adicionado' : 'alterações salvas'}.`);
       Keyboard.dismiss();
@@ -175,8 +213,8 @@ export default function App() {
     }
   }
 
-  const ocupado = salvando || escolhendoCapa;
-  const itensVisiveis = obras.filter((obra) => secaoAberta === 'todos' || obra.status === secaoAberta);
+  const ocupado = salvando || escolhendoCapa || contaOcupada;
+  const itensVisiveis = filtrarObras(obras, secaoAberta, busca);
   const opcoesMenu = [
     { valor: 'cadastro', texto: editandoId === null ? 'Cadastrar novo item' : 'Continuar edição' },
     ...SECOES.map((secao) => ({ ...secao,
@@ -198,14 +236,36 @@ export default function App() {
             <Text style={styles.textoSecundario}>☰ Menu</Text>
           </Pressable>
           <Text style={styles.marca}>Minha Estante</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Sair da conta" disabled={ocupado}
+            onPress={pedirSaida} style={[styles.botaoMenu, ocupado && styles.atenuado]}>
+            <Text style={styles.textoSecundario}>Sair</Text>
+          </Pressable>
         </View>
         <MenuLateral aberto={menuAberto} aoFechar={() => setMenuAberto(false)}
           aoSelecionar={selecionarSecao} selecionado={secaoAberta} opcoes={opcoesMenu} />
         <KeyboardAvoidingView style={styles.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView ref={rolagem} contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled">
             <Text style={styles.etiqueta}>LEITURAS, FILMES E SÉRIES</Text>
+            <Text style={styles.ajuda}>Conta: {usuario.email}</Text>
             <Text style={styles.titulo} accessibilityRole="header">{nomeSecao}</Text>
             {secaoAberta !== 'cadastro' && <Text style={styles.descricao}>{itensVisiveis.length} obra(s) nesta categoria</Text>}
+            {pronto && secaoAberta !== 'cadastro' && (
+              <View style={styles.busca}>
+                <TextInput accessibilityLabel="Buscar obras pelo título" style={styles.campo}
+                  value={busca} onChangeText={setBusca} placeholder="Buscar pelo título…"
+                  placeholderTextColor="#AAB1C1" returnKeyType="search" autoCorrect={false} />
+                {busca !== '' && (
+                  <Pressable accessibilityRole="button" onPress={() => setBusca('')} style={styles.secundario}>
+                    <Text style={styles.textoSecundario}>Limpar busca</Text>
+                  </Pressable>
+                )}
+                {busca.trim() !== '' && itensVisiveis.length === 0 && (
+                  <Text style={styles.descricao} accessibilityLiveRegion="polite">
+                    Nenhuma obra encontrada nesta categoria. Tente outro título ou limpe a busca.
+                  </Text>
+                )}
+              </View>
+            )}
 
             {secaoAberta === 'cadastro' && (
             <View style={styles.cartao}>
@@ -276,6 +336,14 @@ export default function App() {
 
             {mensagem !== '' && <Text style={styles.mensagem} accessibilityLiveRegion="polite">{mensagem}</Text>}
             {carregando && <Text style={styles.descricao}>Carregando sua estante…</Text>}
+            {temLegado && pronto && <View style={styles.cartao}>
+              <Text style={styles.subtitulo}>Cadastros da versão anterior</Text>
+              <Text style={styles.ajuda}>Há uma estante sem login neste aparelho. Você pode vinculá-la à conta atual se ela for sua.</Text>
+              <Pressable accessibilityRole="button" disabled={ocupado} onPress={pedirImportacao}
+                style={[styles.secundario, ocupado && styles.atenuado]}>
+                <Text style={styles.textoSecundario}>Importar minha estante anterior</Text>
+              </Pressable>
+            </View>}
             {!carregando && !pronto && (
               <Pressable accessibilityRole="button" style={styles.adicionar} onPress={tentarCarregar}>
                 <Text style={styles.textoBotao}>Tentar carregar novamente</Text>
@@ -284,7 +352,7 @@ export default function App() {
             {pronto && secaoAberta !== 'cadastro' && (
               <ListaObras obras={itensVisiveis} aoEditar={editarObra} ocupado={ocupado} />
             )}
-            <Text style={styles.ajuda}>Seus cadastros ficam salvos neste celular.</Text>
+            <Text style={styles.ajuda}>Suas obras e capas ficam salvas neste celular, separadas por conta. O backup na nuvem ainda não está disponível.</Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -300,6 +368,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#B8A7FF', borderRadius: 12 },
   marca: { flex: 1, color: '#F5F6FA', fontSize: 22, fontWeight: '700' },
   conteudo: { padding: 24, paddingBottom: 40, gap: 16 },
+  busca: { gap: 12 },
   etiqueta: { color: '#B8A7FF', fontSize: 14, fontWeight: '700' },
   titulo: { color: '#F5F6FA', fontSize: 32, fontWeight: '700' },
   descricao: { color: '#C4C8D4', fontSize: 17, lineHeight: 26 },

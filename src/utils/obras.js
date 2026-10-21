@@ -94,3 +94,10 @@ export function atualizarLista(obras, obra, editandoId) {
   if (!obras.some((item) => item.id === editandoId)) throw new Error('Obra não encontrada.');
   return obras.map((item) => item.id === editandoId ? { ...obra, id: item.id } : item);
 }
+
+export function filtrarObras(obras, secao, busca = '') {
+  const normalizar = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const consulta = normalizar(busca.trim());
+  return obras.filter((obra) => (secao === 'todos' || obra.status === secao)
+    && normalizar(obra.titulo).includes(consulta));
+}
