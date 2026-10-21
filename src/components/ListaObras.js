@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Capa from './Capa';
-import { opcoesStatus, rotuloProgresso } from './obras';
+import { opcoesStatus, rotuloProgresso } from '../utils/obras';
 
 const GRUPOS = [
   { valor: 'livro', texto: 'Livros' },

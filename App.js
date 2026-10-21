@@ -7,13 +7,13 @@ import {
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import Opcoes from './Opcoes';
-import MenuLateral from './MenuLateral';
-import ListaObras from './ListaObras';
-import Capa from './Capa';
-import { apagarCapa, guardarCapa } from './capas';
+import Opcoes from './src/components/Opcoes';
+import MenuLateral from './src/components/MenuLateral';
+import ListaObras from './src/components/ListaObras';
+import Capa from './src/components/Capa';
+import { apagarCapa, guardarCapa } from './src/services/capas';
 import { atualizarLista, lerObras, opcoesStatus, opcoesUnidades, rotuloProgresso,
-  TIPOS, unidadePadrao, validarCadastro } from './obras';
+  TIPOS, unidadePadrao, validarCadastro } from './src/utils/obras';
 
 const CHAVE_ESTANTE = '@minha-estante/obras-v1';
 const SECOES = [

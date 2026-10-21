@@ -4,7 +4,7 @@ O projeto está configurado para gerar um APK de versão final, com o JavaScript
 
 **Situação atual:** APK Android 1.0.0 gerado com sucesso na conta Expo `langue`, com chave Android gerenciada pelo EAS. O teste no celular físico ainda precisa da sua confirmação.
 
-[Baixar o APK para instalar no Android](https://expo.dev/artifacts/eas/d8Tv1Op8i-2cNdNeT7COLs8M2X0LYIoj56Lk2UL-TRU.apk)
+[Consultar instalação e disponibilidade do APK](../instalacao.md)
 
 Cópia local do instalador: `C:\Users\nycol\Documents\Codex\2026-10-07\me-d\outputs\minha-estante-1.0.0.apk`.
 
